@@ -1,176 +1,188 @@
-var horariosTrabalho = [];
 
-function calcular(tipo) {
-    var entrada = document.getElementById("entradaHorario").value;
-    var saida = document.getElementById("saidaHorario").value;
-    var entradaMarcacao = document.getElementById("entradaMarcacao").value;
-    var saidaMarcacao = document.getElementById("saidaMarcacao").value;
+// Adicione um identificador único para cada linha
+var idContador = 0;
+var contadorHorarios = 0;
 
-    $.post("/pontoPro/calculo", { entrada: entrada, saida: saida, entradaMarcacao: entradaMarcacao, 
-        saidaMarcacao: saidaMarcacao }, function(data) {
-        var tabela = document.getElementById("tabela" + tipo);
-        var corpoTabela = tabela.getElementsByTagName('tbody')[0];
-        corpoTabela.innerHTML = "";
+function preencherTabela(tabelaId, dados) {
+    debugger;
+    var tabela = document.getElementById(tabelaId);
+    var tbody = tabela.querySelector('tbody');
 
-        data[tipo].forEach(function(item) {
-            var novaLinha = corpoTabela.insertRow(-1);
-            var celulaEntrada = novaLinha.insertCell(0);
-            var celulaSaida = novaLinha.insertCell(1);
-            var celulaTipo = novaLinha.insertCell(2);
+    // Preencher a tabela com os dados
+    for (var i = 0; i < dados.length; i++) {
+        var novaLinha = tbody.insertRow(-1);
+        novaLinha.id = 'linha' + idContador++;
 
-            celulaEntrada.innerHTML = item.entrada;
-            celulaSaida.innerHTML = item.saida;
-            celulaTipo.innerHTML = item[tipo.toLowerCase()];
-        });
-    });
-};
+        var celulaEntrada = novaLinha.insertCell(-1);
+        var celulaSaida = novaLinha.insertCell(-1);
 
-function adicionarRegistro(formId, tabelaId) {
-    var form = document.getElementById(formId);
+        // Adicione botões de edição e exclusão
+        var celulaAcao = novaLinha.insertCell(-1);
+        celulaAcao.innerHTML = '<button onclick="editarLinha(\'' + novaLinha.id + '\')">Editar</button>';
+
+        var registro = dados[i].registro || dados[i].marcacao;
+        celulaEntrada.innerHTML = registro.entrada;
+        celulaSaida.innerHTML = registro.saida;
+    }
+}
+
+
+function adicionarRegistro() {
+    debugger;
+    if (contadorHorarios >= 3) {
+        alert('Você já preencheu 3 horários de trabalho.');
+        return;
+    }
+
+    var form = document.getElementById('formHorarioTrabalho');
     var entrada = form.querySelector('#entradaHorario').value;
     var saida = form.querySelector('#saidaHorario').value;
 
-    var erro = document.getElementById('erro');
-    erro.style.display = 'none'; 
-    if (!entrada || !saida) {
-        erro.innerHTML = 'Por favor, preencha os horários de entrada e saída.';
-        erro.style.display = 'block'; 
-        return;
+    // Validar e enviar dados
+    if (entrada && saida) {
+        var dados = { acao: 'adicionarRegistro', entrada: entrada, saida: saida };
+        enviarDadosParaServidor('AdicionarRegistroServlet', dados, function (response) {
+            if (response.success) {
+                contadorHorarios++;
+            }
+            callbackAdicionar(response, 'tabelaHorarioTrabalho');
+        });
+    } else {
+        alert('Preencha os horários de entrada e saída.');
     }
-
-    if (saida <= entrada) {
-        erro.innerHTML = 'O horário de saída não pode ser menor ou igual ao horário de entrada.';
-        erro.style.display = 'block';
-        return;
-    }
-
-    var tabela = document.getElementById(tabelaId);
-    var thead = tabela.getElementsByTagName('thead')[0];
-
-        var novaLinhaThead = thead.insertRow(0);
-        var celulaEntrada = novaLinhaThead.insertCell(0);
-        var celulaSaida = novaLinhaThead.insertCell(1);
-        celulaEntrada.innerHTML = 'Horário de Entrada no Trabalho: ' + entrada;
-        celulaSaida.innerHTML = 'Horário de Saída no Trabalho: ' + saida;
-
-    horariosTrabalho.push({ entrada: entrada, saida: saida, marcacoes: [] });
 }
 
-
-function adicionarMarcacao(formId, tabelaId) {
-	debugger;
-    var form = document.getElementById(formId);
+function adicionarMarcacao() {
+    debugger;
+    var form = document.getElementById('formMarcacoes');
     var entradaMarcacao = form.querySelector('#entradaMarcacao').value;
     var saidaMarcacao = form.querySelector('#saidaMarcacao').value;
 
-    var erro = document.getElementById('erro');
-    erro.style.display = 'none'; 
-
-    if (!entradaMarcacao || !saidaMarcacao) {
-        erro.innerHTML = 'Por favor, preencha os horários de entrada e saída.';
-        erro.style.display = 'block'; 
-        return;
-    }
-
-    if (saidaMarcacao <= entradaMarcacao) {
-        erro.innerHTML = 'O horário de saída não pode ser menor ou igual ao horário de entrada.';
-        erro.style.display = 'block'; 
-        return;
-    }
-
-    if (horariosTrabalho.length == 0) {
-        erro.innerHTML = 'Por favor, adicione um horário de trabalho antes de adicionar uma marcação.';
-        erro.style.display = 'block'; 
-        return;
-    }
-
-    var tabela = document.getElementById(tabelaId);
-    var tbody = tabela.getElementsByTagName('tbody')[0];
-
-    var novaLinha = tbody.insertRow(-1);
-    var celulaEntrada = novaLinha.insertCell(0);
-    var celulaSaida = novaLinha.insertCell(1);
-    celulaEntrada.innerHTML = 'Ponto de Entrada batido ás: ' + entradaMarcacao;
-    celulaSaida.innerHTML = 'Ponto de Saída batido ás: ' + saidaMarcacao;
-
-    horariosTrabalho[horariosTrabalho.length - 1].marcacoes.push({ entrada: entradaMarcacao, saida: saidaMarcacao });
-}
-
-
-function calcularDiferenca() {
-    var atrasos = [];
-    var horasExtras = [];
-
-    horariosTrabalho.forEach(function (horario) {
-        var entradaTrabalho = new Date("1970-01-01 " + horario.entrada);
-        var saidaTrabalho = new Date("1970-01-01 " + horario.saida);
-
-        horario.marcacoes.forEach(function (marcacao) {
-            var entradaMarcacao = new Date("1970-01-01 " + marcacao.entrada);
-            var saidaMarcacao = new Date("1970-01-01 " + marcacao.saida);
-
-            if (entradaMarcacao > entradaTrabalho) {
-                atrasos.push({ entrada: horario.entrada, saida: marcacao.entrada, atraso: calcularDiferencaMinutos(entradaTrabalho, entradaMarcacao) });
-            }
-            if (saidaMarcacao < saidaTrabalho) {
-                atrasos.push({ entrada: marcacao.saida, saida: horario.saida, atraso: calcularDiferencaMinutos(saidaMarcacao, saidaTrabalho) });
-            }
-
-            if (entradaMarcacao < entradaTrabalho) {
-                horasExtras.push({ entrada: entradaMarcacao, saida: entradaTrabalho, horaExtra: calcularDiferencaMinutos(entradaMarcacao, entradaTrabalho) });
-            }
-            if (saidaMarcacao > saidaTrabalho) {
-                horasExtras.push({ entrada: saidaTrabalho, saida: saidaMarcacao, horaExtra: calcularDiferencaMinutos(saidaTrabalho, saidaMarcacao) });
-            }
+    // Validar e enviar dados
+    if (entradaMarcacao && saidaMarcacao) {
+        var dados = { acao: 'adicionarMarcacao', entradaMarcacao: entradaMarcacao, saidaMarcacao: saidaMarcacao };
+        enviarDadosParaServidor('AdicionarMarcacaoServlet', dados, function (response) {
+            callbackAdicionar(response, 'tabelaMarcacoes');
         });
-    });
-
-    document.getElementById('mensagemErroHoraExtra').style.display = 'none';
-    document.getElementById('mensagemSucessoAtraso').style.display = 'none';
-
-    if (atrasos.length === 0) {
-        document.getElementById('mensagemSucessoAtraso').style.display = 'block';
+    } else {
+        alert('Preencha os horários de entrada e saída para a marcação.');
     }
-
-    if (horasExtras.length === 0) {
-        document.getElementById('mensagemErroHoraExtra').style.display = 'block';
-    }
-
-    return {
-        atrasos: atrasos,
-        horasExtras: horasExtras
-    };
 }
 
+function editarLinha(idLinha) {
+    debugger;
+    var linha = document.getElementById(idLinha);
+    var celulas = linha.cells;
 
-function calcularDiferencaMinutos(inicio, fim) {
-    var diff = (fim - inicio) / 60000; 
-    return Math.round(diff);
+    // Preencher campos de entrada com valores da linha selecionada
+    document.getElementById('entradaHorario').value = celulas[0].textContent;
+    document.getElementById('saidaHorario').value = celulas[1].textContent;
+
+    // Adicionar um botão de salvar
+    document.getElementById('formHorarioTrabalho').innerHTML += '<button onclick="salvarEdicao(\'' + idLinha + '\')">Salvar</button>';
+}
+
+// Função para salvar a edição
+function salvarEdicao(idLinha) {
+    debugger;
+    var linha = document.getElementById(idLinha);
+    var celulas = linha.cells;
+
+    // Atualizar os valores na linha com os novos valores dos campos de entrada
+    celulas[0].textContent = document.getElementById('entradaHorario').value;
+    celulas[1].textContent = document.getElementById('saidaHorario').value;
+
+    // Remover o botão de salvar
+    document.getElementById('formHorarioTrabalho').innerHTML = '';
+
+    // Limpar os campos de entrada
+    document.getElementById('entradaHorario').value = '';
+    document.getElementById('saidaHorario').value = '';
+}
+
+function enviarDadosParaServidor(urlServlet, dados, successCallback, errorCallback) {
+    debugger;
+    $.ajax({
+        type: 'POST',
+        url: urlServlet,
+        data: dados,
+        success: function (response) {
+            debugger;
+            if (successCallback) {
+                debugger;
+                successCallback(response);
+            }
+        },
+        error: function () {
+            debugger;
+            if (errorCallback) {
+                errorCallback();
+            } else {
+                alert('Erro ao enviar dados para o servidor.');
+            }
+        }
+    });
+}
+
+function callbackAdicionar(response, tabelaId) {
+    debugger;
+    if (response.success) {
+        preencherTabela(tabelaId, [response]);
+    } else {
+        alert('Erro ao adicionar.');
+    }
 }
 
 function calcularAtrasos() {
-    var diferenca = calcularDiferenca();
-    var atrasos = diferenca.atrasos;
+    // Obter os dados dos horários de trabalho e das marcações de trabalho
+    var horariosTrabalho = obterHorariosTrabalho();
+    var marcacoesTrabalho = obterMarcacoesTrabalho();
 
-    limparTabela("tabelaAtraso");
-
-    preencherTabelaAtraso("tabelaAtraso", atrasos);
+    // Enviar os dados para o servlet
+    $.ajax({
+        type: 'POST',
+        url: 'CalcularAtrasoHoraExtraServlet',
+        data: {
+            horariosTrabalho: horariosTrabalho,
+            marcacoesTrabalho: marcacoesTrabalho
+        },
+        success: function (response) {
+            // Lógica de callback, se necessário
+            console.log(response);
+        },
+        error: function () {
+            alert('Erro ao enviar dados para o servidor.');
+        }
+    });
 }
 
 function calcularHorasExtras() {
-    var diferenca = calcularDiferenca();
-    var horasExtras = diferenca.horasExtras;
+	debugger;
+    // Obter os dados dos horários de trabalho e das marcações de trabalho
+    var horariosTrabalho = obterHorariosTrabalho();
+    var marcacoesTrabalho = obterMarcacoesTrabalho();
 
-    limparTabela("tabelaHoraExtra");
-
-    preencherTabelaHoraExtra("tabelaHoraExtra", horasExtras);
+    // Enviar os dados para o servlet
+  $.ajax({
+    type: 'POST',
+    url: 'CalcularAtrasoHoraExtraServlet',
+    data: {
+        horariosTrabalho: JSON.stringify(horariosTrabalho),
+        marcacoesTrabalho: JSON.stringify(marcacoesTrabalho)
+    },
+        success: function (response) {
+            // Lógica de callback, se necessário
+            console.log(response);
+        },
+        error: function () {
+            alert('Erro ao enviar dados para o servidor.');
+        }
+    });
 }
 
-function limparTabela(idTabela) {
-    var tabela = document.getElementById(idTabela);
-    var corpoTabela = tabela.getElementsByTagName('tbody')[0];
-    corpoTabela.innerHTML = "";
-}
+
+
+
 
 function preencherTabelaHoraExtra(idTabela, dados) {
     var tabela = document.getElementById(idTabela);
@@ -190,22 +202,52 @@ function preencherTabelaHoraExtra(idTabela, dados) {
     });
 }
 
+function obterHorariosTrabalho() {
+	debugger;
+    // Obter todas as linhas da tabela de horários de trabalho
+    var linhas = document.getElementById('tabelaHorarioTrabalho').rows;
 
-function formatarHora(data) {
-    var opcoes = { hour: '2-digit', minute: '2-digit' };
-    return data.toLocaleTimeString('pt-BR', opcoes);
+    // Inicializar um array para armazenar os horários de trabalho
+    var horariosTrabalho = [];
+
+    // Iterar sobre cada linha da tabela
+    for (var i = 0; i < linhas.length; i++) {
+        // Obter as células da linha atual
+        var celulas = linhas[i].cells;
+
+        // Obter o horário de entrada e saída da linha atual
+        var entrada = celulas[0].textContent;
+        var saida = celulas[1].textContent;
+
+        // Adicionar o horário de trabalho ao array
+        horariosTrabalho.push({ entrada: entrada, saida: saida });
+    }
+
+    return horariosTrabalho;
 }
 
+function obterMarcacoesTrabalho() {
+	debugger;
+    // Obter todas as linhas da tabela de marcações de trabalho
+    var linhas = document.getElementById('tabelaMarcacoes').rows;
 
-function millisecondsToTime(ms) {
-    var seconds = Math.floor((ms / 1000) % 60);
-    var minutes = Math.floor((ms / (1000 * 60)) % 60);
-    var hours = Math.floor((ms / (1000 * 60 * 60)) % 24);
+    // Inicializar um array para armazenar as marcações de trabalho
+    var marcacoesTrabalho = [];
 
-    hours = hours < 10 ? '0' + hours : hours;
-    minutes = minutes < 10 ? '0' + minutes : minutes;
+    // Iterar sobre cada linha da tabela
+    for (var i = 0; i < linhas.length; i++) {
+        // Obter as células da linha atual
+        var celulas = linhas[i].cells;
 
-    return hours + ":" + minutes;
+        // Obter o horário de entrada e saída da linha atual
+        var entrada = celulas[0].textContent;
+        var saida = celulas[1].textContent;
+
+        // Adicionar a marcação de trabalho ao array
+        marcacoesTrabalho.push({ entrada: entrada, saida: saida });
+    }
+
+    return marcacoesTrabalho;
 }
 
 

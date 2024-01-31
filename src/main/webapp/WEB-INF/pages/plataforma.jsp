@@ -37,70 +37,56 @@
                     <div class="card-body">
                         <h2 class="card-title font-weight-bold text-left">Horário de Trabalho</h2>
                         <div class="table-responsive">
-                         <div id="erro" class="alert alert-danger" style="display: none;"></div>
+                            <div id="erro" class="alert alert-danger" style="display: none;"></div>
                             <table class="table table-bordered table-hover" id="tabelaHorarioTrabalho">
-                                <thead>
-                                </thead>
-                            </table>
-                        </div>
-                        <form id="formHorarioTrabalho">
-             		 <div class="row mt-3 justify-content-end">
-					    <div class="col-md-4">
-						    <label for="entradaHorario" class="form-label">Entrada:</label>
-						    <div class="input-group bootstrap-timepicker timepicker">
-						        <input type="time" class="form-control input-small datetimepicker rounded-3" id="entradaHorario" placeholder="HH:MM">
-						        <span class="input-group-addon"><i class="fas fa-clock"></i></span>
-						    </div>
-						</div>
-						
-						<div class="col-md-4">
-						    <label for="saidaHorario" class="form-label">Saída:</label>
-						    <div class="input-group bootstrap-timepicker timepicker">
-						        <input type="time" class="form-control input-small datetimepicker rounded-3" id="saidaHorario" placeholder="HH:MM">
-						        <span class="input-group-addon"><i class="fas fa-clock"></i></span>
-						    </div>
-						</div>
-						
-						<div class="col-md-4 d-flex align-items-center justify-content-center">
-						    <button type="button" class="btn btn-primary" onclick="adicionarRegistro('formHorarioTrabalho', 'tabelaHorarioTrabalho')">Adicionar Horário de Trabalho</button>
-						</div>
-                </div>
-            </form>
-                    </div>
-                </div>
-
-                <div class="card mt-4">
-                    <div class="card-body">
-                        <h2 class="card-title font-weight-bold text-left">Marcações</h2>
-                           <div class="table-responsive">
-                            <table class="table table-bordered table-hover" id="tabelaMarcacoes">
-                                <tbody id="corpo-tabelaMarcacoes">
+                                <tbody>
+                                    <!-- Linhas da tabela preenchidas dinamicamente -->
                                 </tbody>
                             </table>
                         </div>
-	                        <form id="formMarcacoes">
-			                <div class="row mt-3">
-			                    <div class="col-md-4">
-								    <label for="entradaMarcacao" class="form-label">Entrada Marcação:</label>
-								    <div class="input-group bootstrap-timepicker timepicker">
-								        <input type="time" class="form-control input-small datetimepicker rounded-3" id="entradaMarcacao" placeholder="HH:MM">
-								        <span class="input-group-addon"><i class="fas fa-clock"></i></span>
-								    </div>
-								</div>
-								
-								<div class="col-md-4">
-								    <label for="saidaMarcacao" class="form-label">Saída Marcação:</label>
-								    <div class="input-group bootstrap-timepicker timepicker">
-								        <input type="time" class="form-control input-small datetimepicker rounded-3" id="saidaMarcacao" placeholder="HH:MM">
-								        <span class="input-group-addon"><i class="fas fa-clock"></i></span>
-								    </div>
-								</div>
-								
-								<div class="col-md-4 d-flex align-items-center justify-content-center mt-3">
-								    <button type="button" class="btn btn-primary" onclick="adicionarMarcacao('formMarcacoes', 'tabelaMarcacoes')">Adicionar Marcação de Ponto</button>
-								</div>
-			                </div>
-			            </form>
+                        <form id="formHorarioTrabalho">
+                            <div class="row mt-3 justify-content-end">
+                                <div class="col-md-4">
+                                    <label for="entradaHorario" class="form-label">Entrada:</label>
+                                    <input type="time" class="form-control" id="entradaHorario" placeholder="HH:MM">
+                                </div>
+                                <div class="col-md-4">
+                                    <label for="saidaHorario" class="form-label">Saída:</label>
+                                    <input type="time" class="form-control" id="saidaHorario" placeholder="HH:MM">
+                                </div>
+                                <div class="col-md-4 d-flex align-items-center justify-content-center">
+                                    <button type="button" class="btn btn-primary" onclick="adicionarRegistro()">Adicionar Horário de Trabalho</button>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+               <div class="card mt-4">
+                    <div class="card-body">
+                        <h2 class="card-title font-weight-bold text-left">Marcações</h2>
+                        <div class="table-responsive">
+                            <table class="table table-bordered table-hover" id="tabelaMarcacoes">
+                                <tbody id="corpo-tabelaMarcacoes">
+                                    <!-- Linhas da tabela preenchidas dinamicamente -->
+                                </tbody>
+                            </table>
+                        </div>
+                        <form id="formMarcacoes">
+                            <div class="row mt-3">
+                                <div class="col-md-4">
+                                    <label for="entradaMarcacao" class="form-label">Entrada Marcação:</label>
+                                    <input type="time" class="form-control" id="entradaMarcacao" placeholder="HH:MM">
+                                </div>
+                                <div class="col-md-4">
+                                    <label for="saidaMarcacao" class="form-label">Saída Marcação:</label>
+                                    <input type="time" class="form-control" id="saidaMarcacao" placeholder="HH:MM">
+                                </div>
+                                <div class="col-md-4 d-flex align-items-center justify-content-center mt-3">
+                                    <button type="button" class="btn btn-primary" onclick="adicionarMarcacao()">Adicionar Marcação de Ponto</button>
+                                </div>
+                            </div>
+                        </form>
                     </div>
                 </div>
             </div>
